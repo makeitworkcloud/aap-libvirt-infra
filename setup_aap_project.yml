@@ -61,7 +61,7 @@
         body_format: json
         headers:
           Content-Type: "application/json"
-        status_code: 201
+        status_code: 202
         return_content: true
       register: sync_result
 
