@@ -53,7 +53,7 @@
     - name: Trigger Project Sync (Update)
       ansible.builtin.uri:
         url: "{{ 'https://' ~ hostvars['localhost']['controller_host'] ~ '/api/controller/v2/projects/'
-          ~ (project_result.json.id | default(project_get.json.results[-1].id)) ~ '/update/' }}"
+          ~ (project_result.json.id | default(project_get.json.results[0].id)) ~ '/update/' }}"
         method: POST
         user: "{{ hostvars['localhost']['controller_username'] }}"
         password: "{{ hostvars['localhost']['controller_password'] }}"
