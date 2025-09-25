@@ -17,7 +17,7 @@
       community.sops.load_vars:
         file: secrets/secrets.yaml
 
-- name: Create project via API
+- name: Deploy AAP content via API
   hosts: localhost
   tasks:
     - name: Create libvirt project
@@ -35,10 +35,125 @@
           scm_url: "https://github.com/makeitworkcloud/aap-libvirt-infra.git"
           organization: 1
         status_code: 201
-        validate_certs: true
-      register: result
+      register: project_result
 
     - name: Show result
       ansible.builtin.debug:
-        var: result
-...
+        var: project_result
+
+    - name: Create Inventory
+      ansible.builtin.uri:
+        url: "{{ hostvars['localhost']['controller_host'] }}/api/controller/v2/inventories/"
+        method: POST
+        user: "{{ hostvars['localhost']['controller_username'] }}"
+        password: "{{ hostvars['localhost']['controller_password'] }}"
+        force_basic_auth: true
+        body_format: json
+        body:
+          name: "libvirt-infra"
+          description: "Created via REST API"
+          organization: "1"
+        status_code: 201
+      register: inventory_result
+
+    - name: Show result
+      ansible.builtin.debug:
+        var: inventory_result
+
+    - name: Add host to inventory
+      ansible.builtin.uri:
+        url: "{{ hostvars['localhost']['controller_host'] }}/api/controller/v2/hosts/"
+        method: POST
+        user: "{{ hostvars['localhost']['controller_username'] }}"
+        password: "{{ hostvars['localhost']['controller_password'] }}"
+        force_basic_auth: true
+        body_format: json
+        body:
+          name: "{{ hostvars['localhost']['libvirt_host'] }}"
+          inventory: "{{ inventory_result.json.id | default }}"
+          variables: |
+            ansible_host: {{ hostvars['localhost']['libvirt_fqdn'] }}
+        status_code: 201
+        validate_certs: false
+      register: host_result
+
+    - name: Show result
+      ansible.builtin.debug:
+        var: host_result
+
+    - name: Create Machine Credential (SSH key) in AAP
+      ansible.builtin.uri:
+        url: "{{ hostvars['localhost']['controller_host'] }}/api/controller/v2/credentials/"
+        method: POST
+        user: "{{ hostvars['localhost']['controller_username'] }}"
+        password: "{{ hostvars['localhost']['controller_password'] }}"
+        force_basic_auth: true
+        body_format: json
+        body:
+          name: "libvirt-infra SSH"
+          description: "https://github.com/makeitworkcloud/aap-libvirt-infra/"
+          credential_type: "1"
+          organization: "1"
+          inputs:
+            username: "{{ hostvars['localhost']['libvirt_ssh_user'] }}"
+            ssh_key_data: "{{ hostvars['localhost']['libvirt_ssh_private_key'] }}"
+        status_code: 201
+        validate_certs: false
+      register: cred_result
+
+    - name: Show result
+      ansible.builtin.debug:
+        var: cred_result
+
+    - name: Create Vault Credential in AAP
+      ansible.builtin.uri:
+        url: "{{ hostvars['localhost']['controller_host'] }}/api/controller/v2/credentials/"
+        method: POST
+        user: "{{ hostvars['localhost']['controller_username'] }}"
+        password: "{{ hostvars['localhost']['controller_password'] }}"
+        force_basic_auth: true
+        body_format: json
+        body:
+          name: "libvirt-infra Vault"
+          description: "Credential for unlocking Ansible Vault files"
+          credential_type: "3"
+          organization: "1"
+          inputs:
+            vault_password: "{{ hostvars['localhost']['vault_password'] }}"
+        status_code: 201
+        validate_certs: false
+      register: vault_cred_result
+
+    - name: Show result
+      ansible.builtin.debug:
+        var: vault_cred_result
+
+    - name: Find all files in playbooks/ directory
+      ansible.builtin.find:
+        paths: ./playbooks/
+        file_type: file
+        recurse: false
+      register: found_playbooks
+
+    - name: Create job templates for each playbook
+      ansible.builtin.uri:
+        url: "{{ hostvars['localhost']['controller_host'] }}/api/controller/v2/job_templates/"
+        method: POST
+        user: "{{ hostvars['localhost']['controller_username'] }}"
+        password: "{{ hostvars['localhost']['controller_password'] }}"
+        force_basic_auth: true
+        body_format: json
+        body:
+          name: "{{ item.path | basename | regex_replace('\\.yml$', '') }}"
+          description: "Job template for {{ item.path | basename }}"
+          job_type: "run"
+          inventory: "{{ inventory_result.json.id | default }}"
+          project: "{{ project_result.json.id | default }}"
+          playbook: "{{ item.path | basename }}"
+          organization: "1"
+          credentials:
+            - "{{ cred_result.json.id | default }}"
+            - "{{ vault_cred_result.json.id | default }}"
+        status_code: 201
+      loop: "{{ found_playbooks.files }}"
+      register: job_template_results

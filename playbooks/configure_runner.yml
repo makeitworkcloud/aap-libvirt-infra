@@ -1,0 +1,45 @@
+#!/usr/bin/env ansible-playbook
+# File: configure_runner.yml
+# GitHub: https://github.com/makeitworkcloud/aap-libvirt-infra/playbooks/configure_runner.yml
+# Description: This playbook configures a pre-provisioned GitHub Actions runner.
+# Author:
+#                                   _|
+#   _|    _|  _|_|_|      _|_|    _|_|_|_|    _|_|
+#     _|_|    _|    _|  _|    _|    _|      _|    _|
+#   _|    _|  _|    _|  _|    _|    _|      _|    _|
+#   _|    _|  _|    _|    _|_|        _|_|    _|_|
+---
+- name: Configure a pre-provisioned GitHub Actions runner
+  hosts: all
+  gather_facts: false
+  vars_files:
+    - ../vars/configure_runner.yml
+  tasks:
+    - name: Get latest GitHub Actions runner version
+      ansible.builtin.uri:
+        url: https://api.github.com/repos/actions/runner/releases/latest
+        return_content: true
+      register: actions_runner_json_reponse
+
+    - name: Configure GitHub Actions runner
+      ansible.builtin.shell:
+        cmd: |
+          sudo mkfs.xfs /dev/vdb
+          sudo mkdir -p /var/lib/docker
+          sudo mount /dev/vdb /var/lib/docker
+          sudo bash -c 'echo \"/dev/vdb /var/lib/docker xfs defaults 0 0\" >> /etc/fstab'
+          sudo dnf install docker -y
+          sudo systemctl enable docker
+          sudo usermod -aG docker {{ runner_ssh_user }}
+          sudo hostnamectl set-hostname runner
+          mkdir actions-runner
+          curl -o actions-runner/actions-runner-linux-x64-{{ actions_runner_json_reponse.json.tag_name }}.tar.gz \
+            -L https://github.com/actions/runner/releases/download/{{ actions_runner_json_reponse.json.tag_name }}\
+            /actions-runner-linux-x64-{{ actions_runner_json_reponse.json.tag_name }}.tar.gz
+          tar xzf actions-runner/actions-runner-linux-x64-{{ actions_runner_json_reponse.json.tag_name }}.tar.gz -C actions-runner
+          cd actions-runner && ./config.sh --name libvirt-infra --labels libvirt --url https://github.com/makeitworkcloud --token {{ runner_github_token }}
+          sudo ./svc.sh install
+          sudo nmcli con mod ens4 ipv4.addresses {{ runner_target_ipv4_addr }}/24
+          sudo reboot
+      changed_when: true
+      delegate_to: "{{ runner_source_ipv4_addr }}"
