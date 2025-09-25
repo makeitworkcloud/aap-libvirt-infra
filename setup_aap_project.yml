@@ -169,3 +169,7 @@
           - 400
       loop: "{{ found_playbooks.files }}"
       register: job_template_results
+
+    - name: Show job template results
+      ansible.builtin.debug:
+        var: job_template_results
