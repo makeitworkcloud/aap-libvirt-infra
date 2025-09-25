@@ -17,18 +17,28 @@
       community.sops.load_vars:
         file: secrets/secrets.yaml
 
-- name: Create libvirt Project
+- name: Create project via API
   hosts: localhost
-  gather_facts: false
   tasks:
-    - name: Create aap project
-      awx.awx.project:
-        name: libvirt-infra
-        organization: Default
-        scm_type: git
-        scm_url: https://github.com/makeitworkcloud/aap-libvirt-infra.git
-        state: present
-        controller_host: "https://{{ hostvars['localhost']['controller_host'] }}"
-        controller_username: "{{ hostvars['localhost']['controller_username'] }}"
-        controller_password: "{{ hostvars['localhost']['controller_password'] }}"
+    - name: Create libvirt project
+      ansible.builtin.uri:
+        url: "https://{{ hostvars['localhost']['controller_host'] }}/api/controller/v2/projects/"
+        method: POST
+        user: "{{ hostvars['localhost']['controller_username'] }}"
+        password: "{{ hostvars['localhost']['controller_password'] }}"
+        force_basic_auth: true
+        body_format: json
+        body:
+          name: "libvirt-infra"
+          description: "Created via URI module"
+          scm_type: "git"
+          scm_url: "https://github.com/makeitworkcloud/aap-libvirt-infra.git"
+          organization: 1
+        status_code: 201
+        validate_certs: true
+      register: result
+
+    - name: Show result
+      ansible.builtin.debug:
+        var: result
 ...
