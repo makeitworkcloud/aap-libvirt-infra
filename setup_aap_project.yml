@@ -45,7 +45,7 @@
 
     - name: Create Inventory
       ansible.builtin.uri:
-        url: "{{ hostvars['localhost']['controller_host'] }}/api/controller/v2/inventories/"
+        url: "https://{{ hostvars['localhost']['controller_host'] }}/api/controller/v2/inventories/"
         method: POST
         user: "{{ hostvars['localhost']['controller_username'] }}"
         password: "{{ hostvars['localhost']['controller_password'] }}"
@@ -66,7 +66,7 @@
 
     - name: Add host to inventory
       ansible.builtin.uri:
-        url: "{{ hostvars['localhost']['controller_host'] }}/api/controller/v2/hosts/"
+        url: "https://{{ hostvars['localhost']['controller_host'] }}/api/controller/v2/hosts/"
         method: POST
         user: "{{ hostvars['localhost']['controller_username'] }}"
         password: "{{ hostvars['localhost']['controller_password'] }}"
@@ -89,7 +89,7 @@
 
     - name: Create Machine Credential (SSH key) in AAP
       ansible.builtin.uri:
-        url: "{{ hostvars['localhost']['controller_host'] }}/api/controller/v2/credentials/"
+        url: "https://{{ hostvars['localhost']['controller_host'] }}/api/controller/v2/credentials/"
         method: POST
         user: "{{ hostvars['localhost']['controller_username'] }}"
         password: "{{ hostvars['localhost']['controller_password'] }}"
@@ -115,7 +115,7 @@
 
     - name: Create Vault Credential in AAP
       ansible.builtin.uri:
-        url: "{{ hostvars['localhost']['controller_host'] }}/api/controller/v2/credentials/"
+        url: "https://{{ hostvars['localhost']['controller_host'] }}/api/controller/v2/credentials/"
         method: POST
         user: "{{ hostvars['localhost']['controller_username'] }}"
         password: "{{ hostvars['localhost']['controller_password'] }}"
@@ -147,7 +147,7 @@
 
     - name: Create job templates for each playbook
       ansible.builtin.uri:
-        url: "{{ hostvars['localhost']['controller_host'] }}/api/controller/v2/job_templates/"
+        url: "https://{{ hostvars['localhost']['controller_host'] }}/api/controller/v2/job_templates/"
         method: POST
         user: "{{ hostvars['localhost']['controller_username'] }}"
         password: "{{ hostvars['localhost']['controller_password'] }}"
