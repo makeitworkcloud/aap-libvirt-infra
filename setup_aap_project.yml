@@ -43,6 +43,17 @@
       ansible.builtin.debug:
         var: project_result
 
+    - name: Get project if POST failed
+      ansible.builtin.uri:
+        url: "{{ hostvars['localhost']['controller_host'] }}/projects/?name=libvirt-infra&organization=1"
+        method: GET
+        user: "{{ hostvars['localhost']['controller_username'] }}"
+        password: "{{ hostvars['localhost']['controller_password'] }}"
+        force_basic_auth: true
+        status_code: 200
+      register: project_get
+      when: project_result.status == 400
+
     - name: Create Inventory
       ansible.builtin.uri:
         url: "https://{{ hostvars['localhost']['controller_host'] }}/api/controller/v2/inventories/"
@@ -63,6 +74,17 @@
     - name: Show result
       ansible.builtin.debug:
         var: inventory_result
+
+    - name: Get inventory if POST failed
+      ansible.builtin.uri:
+        url: "{{ hostvars['localhost']['controller_host'] }}/inventories/?name=libvirt-infra&organization=1"
+        method: GET
+        user: "{{ hostvars['localhost']['controller_username'] }}"
+        password: "{{ hostvars['localhost']['controller_password'] }}"
+        force_basic_auth: true
+        status_code: 200
+      register: inventory_get
+      when: inventory_result.status == 400
 
     - name: Add host to inventory
       ansible.builtin.uri:
@@ -113,6 +135,17 @@
       ansible.builtin.debug:
         var: cred_result
 
+    - name: Get machine credential if POST failed
+      ansible.builtin.uri:
+        url: "{{ hostvars['localhost']['controller_host'] }}/credentials/?name=libvirt-infra%20SSH&organization=1&credential_type=1"
+        method: GET
+        user: "{{ hostvars['localhost']['controller_username'] }}"
+        password: "{{ hostvars['localhost']['controller_password'] }}"
+        force_basic_auth: true
+        status_code: 200
+      register: cred_get
+      when: cred_result.status == 400
+
     - name: Create Vault Credential in AAP
       ansible.builtin.uri:
         url: "https://{{ hostvars['localhost']['controller_host'] }}/api/controller/v2/credentials/"
@@ -138,6 +171,17 @@
       ansible.builtin.debug:
         var: vault_cred_result
 
+    - name: Get vault credential if POST failed
+      ansible.builtin.uri:
+        url: "{{ hostvars['localhost']['controller_host'] }}/credentials/?name=libvirt-infra%20Vault&organization=1&credential_type=3"
+        method: GET
+        user: "{{ hostvars['localhost']['controller_username'] }}"
+        password: "{{ hostvars['localhost']['controller_password'] }}"
+        force_basic_auth: true
+        status_code: 200
+      register: vault_cred_get
+      when: vault_cred_result.status == 400
+
     - name: Find all files in playbooks/ directory
       ansible.builtin.find:
         paths: ./playbooks/
@@ -157,13 +201,13 @@
           name: "{{ item.path | basename | regex_replace('\\.yml$', '') }}"
           description: "Job template for {{ item.path | basename }}"
           job_type: "run"
-          inventory: "{{ inventory_result.json.id | default }}"
-          project: "{{ project_result.json.id | default }}"
+          inventory: "{{ inventory_result.json.id | default(inventory_get.json.results[0].id) }}"
+          project: "{{ project_result.json.id | default(project_get.json.results[0].id) }}"
           playbook: "{{ item.path | basename }}"
           organization: "1"
           credentials:
-            - "{{ cred_result.json.id | default }}"
-            - "{{ vault_cred_result.json.id | default }}"
+            - "{{ cred_result.json.id | default(cred_get.json.results[0].id) }}"
+            - "{{ vault_cred_result.json.id | default(vault_cred_get.json.results[0].id) }}"
         status_code:
           - 201
           - 400
