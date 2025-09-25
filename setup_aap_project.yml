@@ -1,0 +1,34 @@
+#!/usr/bin/env ansible-playbook
+# File: setup_aap_project.yml
+# GitHub: https://github.com/makeitworkcloud/aap-libvirt-infra
+# Description: This playbook creates the libvirt-infra project in Ansible Automation Platform (AAP).
+# Author:
+#                                   _|
+#   _|    _|  _|_|_|      _|_|    _|_|_|_|    _|_|
+#     _|_|    _|    _|  _|    _|    _|      _|    _|
+#   _|    _|  _|    _|  _|    _|    _|      _|    _|
+#   _|    _|  _|    _|    _|_|        _|_|    _|_|
+---
+- name: Load SOPS values
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Load vars task
+      community.sops.load_vars:
+        file: secrets/secrets.yaml
+
+- name: Create libvirt Project
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Create aap project
+      awx.awx.project:
+        name: libvirt-infra
+        organization: Default
+        scm_type: git
+        scm_url: https://github.com/makeitworkcloud/aap-libvirt-infra.git
+        state: present
+        controller_host: "https://{{ hostvars['localhost']['controller_host'] }}"
+        controller_username: "{{ hostvars['localhost']['controller_username'] }}"
+        controller_password: "{{ hostvars['localhost']['controller_password'] }}"
+...
