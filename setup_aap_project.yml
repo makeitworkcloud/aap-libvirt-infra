@@ -45,7 +45,7 @@
 
     - name: Get project if POST failed
       ansible.builtin.uri:
-        url: "https://{{ hostvars['localhost']['controller_host'] }}/projects/?name=libvirt-infra&organization=1"
+        url: "https://{{ hostvars['localhost']['controller_host'] }}/api/controller/v2/projects/?name=libvirt-infra&organization=1"
         method: GET
         user: "{{ hostvars['localhost']['controller_username'] }}"
         password: "{{ hostvars['localhost']['controller_password'] }}"
@@ -77,7 +77,7 @@
 
     - name: Get inventory if POST failed
       ansible.builtin.uri:
-        url: "https://{{ hostvars['localhost']['controller_host'] }}/inventories/?name=libvirt-infra&organization=1"
+        url: "https://{{ hostvars['localhost']['controller_host'] }}/api/controller/v2/inventories/?name=libvirt-infra&organization=1"
         method: GET
         user: "{{ hostvars['localhost']['controller_username'] }}"
         password: "{{ hostvars['localhost']['controller_password'] }}"
@@ -137,7 +137,7 @@
 
     - name: Get machine credential if POST failed
       ansible.builtin.uri:
-        url: "https://{{ hostvars['localhost']['controller_host'] }}/credentials/?name=libvirt-infra%20SSH&organization=1&credential_type=1"
+        url: "https://{{ hostvars['localhost']['controller_host'] }}/api/controller/v2/credentials/?name=libvirt-infra%20SSH&organization=1&credential_type=1"
         method: GET
         user: "{{ hostvars['localhost']['controller_username'] }}"
         password: "{{ hostvars['localhost']['controller_password'] }}"
@@ -173,7 +173,7 @@
 
     - name: Get vault credential if POST failed
       ansible.builtin.uri:
-        url: "https://{{ hostvars['localhost']['controller_host'] }}/credentials/?name=libvirt-infra%20Vault&organization=1&credential_type=3"
+        url: "https://{{ hostvars['localhost']['controller_host'] }}/api/controller/v2/credentials/?name=libvirt-infra%20Vault&organization=1&credential_type=3"
         method: GET
         user: "{{ hostvars['localhost']['controller_username'] }}"
         password: "{{ hostvars['localhost']['controller_password'] }}"
@@ -181,6 +181,10 @@
         status_code: 200
       register: vault_cred_get
       when: vault_cred_result.status == 400
+
+    - name: Display results
+      ansible.builtin.debug:
+        var: vault_cred_get
 
     - name: Find all files in playbooks/ directory
       ansible.builtin.find:
