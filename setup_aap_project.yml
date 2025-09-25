@@ -166,6 +166,22 @@
       ansible.builtin.debug:
         var: vault_cred_get
 
+    - name: Trigger Project Sync (Update)
+      ansible.builtin.uri:
+        url: >
+          https://{{ hostvars['localhost']['controller_host'] }}/api/controller/v1/projects/{{ project_result.json.id
+          | default(project_get.json.results[-1].id) }}/update/
+        method: POST
+        user: "{{ hostvars['localhost']['controller_username'] }}"
+        password: "{{ hostvars['localhost']['controller_password'] }}"
+        force_basic_auth: true
+        body_format: json
+        headers:
+          Content-Type: "application/json"
+        status_code: 201
+        return_content: true
+      register: sync_result
+
     - name: Find all files in playbooks/ directory
       ansible.builtin.find:
         paths: ./playbooks/
@@ -197,19 +213,3 @@
           - 400
       loop: "{{ found_playbooks.files }}"
       register: job_template_results
-
-    - name: Trigger Project Sync (Update)
-      ansible.builtin.uri:
-        url: >
-          https://{{ hostvars['localhost']['controller_host'] }}/api/controller/v2/projects/{{ project_result.json.id
-          | default(project_get.json.results[0].id) }}/update/
-        method: POST
-        user: "{{ hostvars['localhost']['controller_username'] }}"
-        password: "{{ hostvars['localhost']['controller_password'] }}"
-        force_basic_auth: true
-        body_format: json
-        headers:
-          Content-Type: "application/json"
-        status_code: 202
-        return_content: true
-      register: sync_result
