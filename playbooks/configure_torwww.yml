@@ -12,7 +12,17 @@
 - name: Configure a pre-provisioned Onion web mirror
   hosts: torwww
   gather_facts: false
+  vars_files:
+    - ../vars/configure_torwww.yml
   tasks:
+    - name: Wait for port 22 to be open on the runner
+      ansible.builtin.wait_for:
+        host: "{{ torwww_ipv4_addr }}"
+        port: 22
+        timeout: 300
+        state: started
+      delegate_to: "{{ libvirt_host }}"
+
     - name: Propagate /var/www
       ansible.builtin.file:
         path: /var/www
