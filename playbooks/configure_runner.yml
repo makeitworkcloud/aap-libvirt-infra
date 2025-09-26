@@ -97,10 +97,13 @@
       ansible.posix.selinux:
         state: disabled
       become: true
+      notify: Reboot the runner to apply SELinux changes
 
+  handlers:
     - name: Reboot the runner to apply SELinux changes
       ansible.builtin.reboot:
         msg: "Rebooting to apply SELinux changes"
         pre_reboot_delay: 10
         reboot_timeout: 300
       become: true
+      when: selinux_status.changed
