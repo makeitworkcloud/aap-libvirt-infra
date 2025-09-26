@@ -26,4 +26,4 @@ jobs:
 
       - name: Deploy AAP Content
         run: |
-          ansible-playbook setup_aap_project.yml
+          ansible-playbook cd/setup_aap_project.yml
