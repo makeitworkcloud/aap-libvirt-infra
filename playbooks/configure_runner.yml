@@ -12,6 +12,8 @@
 - name: Configure a pre-provisioned GitHub Actions runner
   hosts: runner
   gather_facts: false
+  vars:
+    ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
   vars_files:
     - ../vars/configure_runner.yml
   tasks:
