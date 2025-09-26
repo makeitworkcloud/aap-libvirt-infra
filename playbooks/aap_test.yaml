@@ -1,9 +1,0 @@
-#!/usr/bin/env ansible-playbook
----
-- name: AAP Test Playbook
-  gather_facts: false
-  hosts: localhost
-  tasks:
-    - name: Print Hello World
-      ansible.builtin.debug:
-        msg: "Hello, World!"
