@@ -19,6 +19,7 @@
       ansible.builtin.known_hosts:
         name: "{{ libvirt_host }}"
         key: "{{ lookup('pipe', 'ssh-keyscan ' ~ libvirt_fqdn) }}"
+      delegate_to: localhost
 
     - name: Get latest GitHub Actions runner version
       ansible.builtin.uri:
