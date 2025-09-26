@@ -108,7 +108,7 @@
       ansible.builtin.shell:
         cmd: |
           set -o pipefail
-          yes | warp-cli registration new --accept-tos
+          yes | warp-cli registration new -- --accept-tos
           yes | warp-cli connect
       changed_when: false
       become: true
