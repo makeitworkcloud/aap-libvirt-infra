@@ -12,8 +12,6 @@
 - name: Configure a pre-provisioned Onion web mirror
   hosts: torwww
   gather_facts: false
-  vars:
-    ansible_become_allow_same_user: true
   vars_files:
     - ../vars/configure_torwww.yml
   tasks:
@@ -82,7 +80,14 @@
         dest: /var/www/html
         version: main
       become: true
-      become_user: nginx
+
+    - name: Grant owenrship to nginx of repo
+      ansible.builtin.file:
+        path: /var/www/html
+        owner: nginx
+        group: nginx
+        recurse: true
+      become: true
 
     - name: Cronjob to sync repo every half hour
       ansible.builtin.cron:
