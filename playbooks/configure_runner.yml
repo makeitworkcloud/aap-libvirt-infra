@@ -89,7 +89,7 @@
         cmd: |
           ./svc.sh install
         chdir: "/home/{{ runner_ssh_user }}/actions-runner"
-        creates: "/etc/systemd/system/actions.runner.{{ github_org }}.libvirt-{{ random_id }}.service"
+        creates: "/etc/systemd/system/actions.runner.{{ github_org }}.libvirt-*.service"
       become: true
       changed_when: true
 
