@@ -207,7 +207,7 @@
       ansible.builtin.uri:
         url: >-
           {{ 'https://' ~ hostvars['localhost']['controller_host'] ~ '/api/controller/v2/job_templates/?name='
-          ~ (item.path | basename | regex_replace('\\.yml$', '')) ~ '&organization=1' }}
+          ~ (item.path | basename | regex_replace('\.yml$', '')) ~ '&organization=1' }}
         method: GET
         user: "{{ hostvars['localhost']['controller_username'] }}"
         password: "{{ hostvars['localhost']['controller_password'] }}"
