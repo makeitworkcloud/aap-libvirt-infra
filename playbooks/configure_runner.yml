@@ -21,11 +21,6 @@
         return_content: true
       register: actions_runner_json_reponse
 
-    - name: Delete ARP entry
-      become: true
-      ansible.builtin.command: "ip neigh del {{ runner_ipv4_addr }} dev nm-bridge"
-      changed_when: false
-
     - name: Wait for port 22 to be open
       ansible.builtin.wait_for:
         host: "{{ runner_ipv4_addr }}"
