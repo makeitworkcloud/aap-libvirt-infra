@@ -1,0 +1,4 @@
+ANSIBLE_VAULT_PASSWORD_FILE := "./scripts/vault.bash"
+
+commit:
+	@ANSIBLE_VAULT_PASSWORD_FILE=$(ANSIBLE_VAULT_PASSWORD_FILE) git commit
