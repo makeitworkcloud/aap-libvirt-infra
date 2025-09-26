@@ -5,7 +5,7 @@
 # Notes:
 #  - The instance being managed has issues registering Automation Hub with the Hybrid Cloud Console.
 #    The proprietary Red Hat AAP collection(s) cannot be imported or registered for usage.
-#  - The awx.awx collection automatically appends `/api/v2`` to the endpoint, which does not work with AAP.
+#  - The awx.awx collection automatically appends `/api/v2` to the endpoint, which does not work with AAP.
 #    The default Ansible Controller endpoint is `/api/controller/v2`.
 #    Therefore, the ansible.builtin.uri module is used instead.
 #  - Thanks, Red Hat.
