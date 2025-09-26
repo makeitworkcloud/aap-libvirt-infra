@@ -38,6 +38,9 @@
           Accept: "application/vnd.github+json"
         body_format: json
         return_content: true
+        status_code:
+          - 200
+          - 201
       register: github_runner_token
 
     - name: Set registration token fact
