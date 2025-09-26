@@ -53,14 +53,14 @@
       ansible.builtin.get_url:
         url: >-
           {{ 'https://github.com/actions/runner/releases/download/' ~ actions_runner_json_reponse.json.tag_name
-          ~ '/actions-runner-linux-x64-' ~ actions_runner_json_reponse.json.tag_name ~ '.tar.gz' }}
-        dest: "/tmp/actions-runner-linux-x64-{{ actions_runner_json_reponse.json.tag_name }}.tar.gz"
+          ~ '/actions-runner-linux-x64-' ~ actions_runner_json_reponse.json.tag_name[1:] ~ '.tar.gz' }}
+        dest: "/tmp/actions-runner-linux-x64-{{ actions_runner_json_reponse.json.tag_name[1:] }}.tar.gz"
         owner: "{{ runner_ssh_user }}"
         mode: '0644'
 
     - name: Extract GitHub Actions runner
       ansible.builtin.unarchive:
-        src: "/tmp/actions-runner-linux-x64-{{ actions_runner_json_reponse.json.tag_name }}.tar.gz"
+        src: "/tmp/actions-runner-linux-x64-{{ actions_runner_json_reponse.json.tag_name[1:] }}.tar.gz"
         dest: "/home/{{ runner_ssh_user }}/actions-runner"
         remote_src: true
         owner: "{{ runner_ssh_user }}"
