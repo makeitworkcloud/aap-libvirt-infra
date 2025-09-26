@@ -30,6 +30,7 @@
         owner: nginx
         group: nginx
         mode: "0755"
+      become: true
 
     - name: Propagate /var/www/html
       ansible.builtin.file:
@@ -38,32 +39,40 @@
         owner: nginx
         group: nginx
         mode: "0755"
+      become: true
 
     - name: Change server in /etc/nginx/nginx.conf
       ansible.builtin.lineinfile:
         path: /etc/nginx/nginx.conf
         regexp: "^        listen       80;$"
         line: "        listen       127.0.0.1:80;"
+      become: true
 
     - name: Remove IPV6 in /etc/nginx/nginx.conf
       ansible.builtin.lineinfile:
         path: /etc/nginx/nginx.conf
         regexp: "^        listen       [::]:80;"
         state: absent
+      become: true
 
     - name: Change web dir in /etc/nginx/nginx.conf
       ansible.builtin.lineinfile:
         path: /etc/nginx/nginx.conf
         regexp: "^        root         /usr/share/nginx/html;"
         line: "        root         /var/www/html;"
+      become: true
 
     - name: Copy git config file
       ansible.builtin.copy:
-        src: git.conf
+        content: |
+          location ~ /\. {
+            deny all;
+          }
         dest: /etc/nginx/default.d/git.conf
         owner: nginx
         group: nginx
         mode: "0644"
+      become: true
 
     - name: Clone git repo
       ansible.builtin.git:
@@ -79,18 +88,21 @@
         minute: "*/15"
         user: nginx
         job: "cd /var/www/html && git pull"
+      become: true
 
     - name: Start & Enable nginx
       ansible.builtin.systemd:
         name: nginx.service
         state: started
         enabled: true
+      become: true
 
     - name: Start & Enable warp-svc service
       ansible.builtin.systemd:
         name: warp-svc.service
         enabled: true
         state: started
+      become: true
 
     - name: Start & Enable WARP
       ansible.builtin.shell:
@@ -116,6 +128,7 @@
         path: "/etc/tor/torrc"
         regexp: "^#ControlPort 9051$"
         line: "ControlPort 9051"
+      become: true
 
     - name: Enable HiddenServiceDir
       ansible.builtin.lineinfile:
@@ -123,6 +136,7 @@
         line: "HiddenServiceDir /var/lib/tor/hidden_service/"
         state: present
         insertafter: "^############### This section is just for location-hidden services ###$"
+      become: true
 
     - name: Define HiddenServiceVersion
       ansible.builtin.lineinfile:
@@ -130,6 +144,7 @@
         line: "HiddenServiceVersion 3"
         state: present
         insertafter: "^HiddenServiceDir /var/lib/tor/hidden_service/$"
+      become: true
 
     - name: Enable Web HiddenServicePort
       ansible.builtin.lineinfile:
@@ -137,9 +152,11 @@
         line: "HiddenServicePort 80 127.0.0.1:80"
         state: present
         insertafter: "^HiddenServiceVersion 3$"
+      become: true
 
     - name: "Start & Disable Tor"
       ansible.builtin.systemd:
         name: tor.service
         state: started
         enabled: false
+      become: true
