@@ -87,10 +87,13 @@
       become: true
       changed_when: true
 
-    - name: Start GitHub Actions runner service
-      ansible.builtin.command:
-        cmd: |
-          ./svc.sh start
-        chdir: "/home/{{ runner_ssh_user }}/actions-runner"
-      become: true
-      changed_when: true
+    - name: Disable SELinux
+      ansible.posix.selinux:
+        state: disabled
+      register: selinux_status
+
+    - name: Reboot the runner to apply SELinux changes
+      ansible.builtin.reboot:
+        msg: "Rebooting to apply SELinux changes"
+        pre_reboot_delay: 10
+        reboot_timeout: 300
