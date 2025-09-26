@@ -31,8 +31,6 @@
     - name: Configure GitHub Actions runner
       ansible.builtin.shell:
         cmd: |
-          sudo mkfs.xfs /dev/vdb
-          sudo mkdir -p /var/lib/docker
           sudo dnf install docker -y
           sudo systemctl enable docker
           sudo usermod -aG docker {{ runner_ssh_user }}
