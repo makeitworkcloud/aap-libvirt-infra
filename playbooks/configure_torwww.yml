@@ -15,7 +15,7 @@
   vars_files:
     - ../vars/configure_torwww.yml
   tasks:
-    - name: Wait for port 22 to be open on the runner
+    - name: Wait for port 22 to be open on the node
       ansible.builtin.wait_for:
         host: "{{ torwww_ipv4_addr }}"
         port: 22
