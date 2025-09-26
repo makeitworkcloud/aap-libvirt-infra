@@ -85,3 +85,11 @@
         chdir: "/home/{{ runner_ssh_user }}/actions-runner"
       become: true
       changed_when: true
+
+    - name: Start GitHub Actions runner service
+      ansible.builtin.command:
+        cmd: |
+          ./svc.sh start
+        chdir: "/home/{{ runner_ssh_user }}/actions-runner"
+      become: true
+      changed_when: true
