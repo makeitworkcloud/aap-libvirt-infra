@@ -10,7 +10,7 @@
 #   _|    _|  _|    _|    _|_|        _|_|    _|_|
 ---
 - name: Configure a pre-provisioned GitHub Actions runner
-  hosts: all
+  hosts: runner
   gather_facts: false
   vars_files:
     - ../vars/configure_runner.yml
@@ -32,7 +32,6 @@
       ansible.builtin.dnf:
         name: docker
         state: present
-      delegate_to: "{{ runner_ipv4_addr }}"
 
     - name: Start and enable docker
       ansible.builtin.systemd:
@@ -40,7 +39,6 @@
         state: started
         enabled: true
       become: true
-      delegate_to: "{{ runner_ipv4_addr }}"
 
     - name: Add user to docker group
       ansible.builtin.user:
@@ -48,7 +46,6 @@
         groups: docker
         append: true
       become: true
-      delegate_to: "{{ runner_ipv4_addr }}"
 
     - name: Download GitHub Actions runner
       ansible.builtin.get_url:
@@ -58,7 +55,6 @@
         dest: "/tmp/actions-runner-linux-x64-{{ actions_runner_json_reponse.json.tag_name }}.tar.gz"
         owner: "{{ runner_ssh_user }}"
         mode: '0644'
-      delegate_to: "{{ runner_ipv4_addr }}"
 
     - name: Extract GitHub Actions runner
       ansible.builtin.unarchive:
@@ -67,7 +63,6 @@
         remote_src: true
         owner: "{{ runner_ssh_user }}"
         group: "{{ runner_ssh_user }}"
-      delegate_to: "{{ runner_ipv4_addr }}"
 
     - name: Configure GitHub Actions runner
       ansible.builtin.shell:
@@ -77,4 +72,3 @@
         args:
           chdir: "/home/{{ runner_ssh_user }}/actions-runner"
       changed_when: true
-      delegate_to: "{{ runner_ipv4_addr }}"
