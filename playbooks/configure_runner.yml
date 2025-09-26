@@ -15,12 +15,6 @@
   vars_files:
     - ../vars/configure_runner.yml
   tasks:
-    - name: Add known hosts
-      ansible.builtin.known_hosts:
-        name: "{{ libvirt_fqdn }}"
-        key: "{{ lookup('pipe', 'ssh-keyscan ' ~ libvirt_fqdn) }}"
-      delegate_to: localhost
-
     - name: Get latest GitHub Actions runner version
       ansible.builtin.uri:
         url: https://api.github.com/repos/actions/runner/releases/latest
@@ -68,7 +62,6 @@
         dest: "/home/{{ runner_ssh_user }}/actions-runner"
         remote_src: true
         owner: "{{ runner_ssh_user }}"
-        group: "{{ runner_ssh_user }}"
 
     - name: Configure GitHub Actions runner
       ansible.builtin.shell:
