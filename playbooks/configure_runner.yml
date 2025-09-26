@@ -32,6 +32,7 @@
       ansible.builtin.dnf:
         name: docker
         state: present
+      become: true
 
     - name: Start and enable docker
       ansible.builtin.systemd:
