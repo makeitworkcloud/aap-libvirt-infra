@@ -12,6 +12,8 @@
 - name: Configure a pre-provisioned Onion web mirror
   hosts: torwww
   gather_facts: false
+  vars:
+    ansible_become_allow_same_user: true
   vars_files:
     - ../vars/configure_torwww.yml
   tasks:
