@@ -74,7 +74,7 @@
     - name: Configure GitHub Actions runner
       ansible.builtin.shell:
         cmd: |
-          ./config.sh --name libvirt-{{ lookup('community.general.random_string', length=4, chars='ascii_letters') }} \
+          ./config.sh --name libvirt-{{ lookup('community.general.random_string', length=4, numbers=false, special=false) }} \
           --unattended --labels libvirt --url https://github.com/makeitworkcloud --token {{ runner_registration_token }}
         chdir: "/home/{{ runner_ssh_user }}/actions-runner"
       changed_when: true
