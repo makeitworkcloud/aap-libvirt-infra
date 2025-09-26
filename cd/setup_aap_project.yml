@@ -22,7 +22,7 @@
   tasks:
     - name: Load vars task
       community.sops.load_vars:
-        file: secrets/secrets.yaml
+        file: ../secrets/secrets.yaml
 
 - name: Deploy AAP content via API
   hosts: localhost
