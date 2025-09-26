@@ -1,0 +1,135 @@
+#!/usr/bin/env ansible-playbook
+# File: configure_torwww.yml
+# GitHub: https://github.com/makeitworkcloud/aap-libvirt-infra/playbooks/configure_torwww.yml
+# Description: This playbook configures a pre-provisioned Onion web mirror.
+# Author:
+#                                   _|
+#   _|    _|  _|_|_|      _|_|    _|_|_|_|    _|_|
+#     _|_|    _|    _|  _|    _|    _|      _|    _|
+#   _|    _|  _|    _|  _|    _|    _|      _|    _|
+#   _|    _|  _|    _|    _|_|        _|_|    _|_|
+---
+- name: Configure a pre-provisioned Onion web mirror
+  hosts: torwww
+  gather_facts: false
+  tasks:
+    - name: Propagate /var/www
+      ansible.builtin.file:
+        path: /var/www
+        state: directory
+        owner: nginx
+        group: nginx
+        mode: "0755"
+
+    - name: Propagate /var/www/html
+      ansible.builtin.file:
+        path: /var/www/html
+        state: directory
+        owner: nginx
+        group: nginx
+        mode: "0755"
+
+    - name: Change server in /etc/nginx/nginx.conf
+      ansible.builtin.lineinfile:
+        path: /etc/nginx/nginx.conf
+        regexp: "^        listen       80;$"
+        line: "        listen       127.0.0.1:80;"
+
+    - name: Remove IPV6 in /etc/nginx/nginx.conf
+      ansible.builtin.lineinfile:
+        path: /etc/nginx/nginx.conf
+        regexp: "^        listen       [::]:80;"
+        state: absent
+
+    - name: Change web dir in /etc/nginx/nginx.conf
+      ansible.builtin.lineinfile:
+        path: /etc/nginx/nginx.conf
+        regexp: "^        root         /usr/share/nginx/html;"
+        line: "        root         /var/www/html;"
+
+    - name: Copy git config file
+      ansible.builtin.copy:
+        src: git.conf
+        dest: /etc/nginx/default.d/git.conf
+        owner: nginx
+        group: nginx
+        mode: "0644"
+
+    - name: Clone git repo
+      ansible.builtin.git:
+        repo: https://github.com/makeitworkcloud/www.git
+        dest: /var/www/html
+        version: main
+      become: true
+      become_user: nginx
+
+    - name: Cronjob to sync repo every half hour
+      ansible.builtin.cron:
+        name: "git-clone"
+        minute: "*/15"
+        user: nginx
+        job: "cd /var/www/html && git pull"
+
+    - name: Start & Enable nginx
+      ansible.builtin.systemd:
+        name: nginx.service
+        state: started
+        enabled: true
+
+    - name: Start & Enable warp-svc service
+      ansible.builtin.systemd:
+        name: warp-svc.service
+        enabled: true
+        state: started
+
+    - name: Start & Enable WARP
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          yes | warp-cli registration new --accept-tos
+          yes | warp-cli connect
+      changed_when: false
+      become: true
+      become_user: "{{ torwww_username }}"
+
+    - name: Verify WARP is on
+      ansible.builtin.uri:
+        url: "https://cloudflare.com/cdn-cgi/trace"
+        return_content: true
+      register: cloudflare_trace
+      until: "'warp=on' in cloudflare_trace.content"
+      retries: 10
+      delay: 1
+
+    - name: Enable ControlPort
+      ansible.builtin.lineinfile:
+        path: "/etc/tor/torrc"
+        regexp: "^#ControlPort 9051$"
+        line: "ControlPort 9051"
+
+    - name: Enable HiddenServiceDir
+      ansible.builtin.lineinfile:
+        path: "/etc/tor/torrc"
+        line: "HiddenServiceDir /var/lib/tor/hidden_service/"
+        state: present
+        insertafter: "^############### This section is just for location-hidden services ###$"
+
+    - name: Define HiddenServiceVersion
+      ansible.builtin.lineinfile:
+        path: "/etc/tor/torrc"
+        line: "HiddenServiceVersion 3"
+        state: present
+        insertafter: "^HiddenServiceDir /var/lib/tor/hidden_service/$"
+
+    - name: Enable Web HiddenServicePort
+      ansible.builtin.lineinfile:
+        path: "/etc/tor/torrc"
+        line: "HiddenServicePort 80 127.0.0.1:80"
+        state: present
+        insertafter: "^HiddenServiceVersion 3$"
+
+    - name: "Start & Disable Tor"
+      ansible.builtin.systemd:
+        name: tor.service
+        state: started
+        enabled: false
