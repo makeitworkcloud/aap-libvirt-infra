@@ -218,6 +218,10 @@
         extended: true
       register: job_template_gets
 
+    - name: Display job_template_gets
+      ansible.builtin.debug:
+        var: job_template_gets
+
     - name: Attach Machine credential to job template
       ansible.builtin.uri:
         url: >-
