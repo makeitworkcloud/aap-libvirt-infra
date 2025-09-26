@@ -15,18 +15,19 @@
   vars_files:
     - ../vars/configure_runner.yml
   tasks:
-    - name: Get latest GitHub Actions runner version
-      ansible.builtin.uri:
-        url: https://api.github.com/repos/actions/runner/releases/latest
-        return_content: true
-      register: actions_runner_json_reponse
-
-    - name: Wait for port 22 to be open
+    - name: Wait for port 22 to be open on the runner
       ansible.builtin.wait_for:
         host: "{{ runner_ipv4_addr }}"
         port: 22
         timeout: 300
         state: started
+      delegate_to: "{{ libvirt_host }}"
+
+    - name: Get latest GitHub Actions runner version
+      ansible.builtin.uri:
+        url: https://api.github.com/repos/actions/runner/releases/latest
+        return_content: true
+      register: actions_runner_json_reponse
 
     - name: Install docker
       ansible.builtin.dnf:
