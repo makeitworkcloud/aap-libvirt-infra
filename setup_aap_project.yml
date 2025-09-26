@@ -185,6 +185,7 @@
       ansible.builtin.find:
         paths: ./playbooks/
         file_type: file
+        patterns: '*.yml,*.yaml'
         recurse: false
       register: found_playbooks
 
