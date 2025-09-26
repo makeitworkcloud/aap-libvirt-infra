@@ -77,6 +77,13 @@
       ansible.builtin.shell:
         cmd: |
           ./config.sh --name libvirt-infra --labels libvirt --url https://github.com/makeitworkcloud --token {{ runner_github_token }}
-          sudo ./svc.sh install
         chdir: "/home/{{ runner_ssh_user }}/actions-runner"
+      changed_when: true
+
+    - name: Install GitHub Actions runner as a service
+      ansible.builtin.command:
+        cmd: |
+          ./svc.sh install
+        chdir: "/home/{{ runner_ssh_user }}/actions-runner"
+      become: true
       changed_when: true
