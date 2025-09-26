@@ -183,7 +183,7 @@
 
     - name: Find all files in playbooks/ directory
       ansible.builtin.find:
-        paths: ./playbooks/
+        paths: ../playbooks/
         file_type: file
         patterns: '*.yml,*.yaml'
         recurse: false
@@ -201,8 +201,8 @@
           name: "{{ item.path | basename | regex_replace('\\.yml$', '') }}"
           description: "Job template for {{ item.path | basename }}"
           job_type: "run"
-          inventory: inventory_get.json.results[0].id
-          project: project_get.json.results[0].id
+          inventory: "{{ inventory_get.json.results[0].id | int }}"
+          project: "{{ project_get.json.results[0].id | int }}"
           playbook: "playbooks/{{ item.path | basename }}"
           organization: "1"
         status_code:
