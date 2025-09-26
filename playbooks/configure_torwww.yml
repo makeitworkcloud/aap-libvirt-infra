@@ -23,12 +23,6 @@
         state: started
       delegate_to: "{{ libvirt_host }}"
 
-    - name: Disable SELinux
-      ansible.posix.selinux:
-        state: disabled
-      become: true
-      notify: Reboot the node to apply SELinux changes
-
     - name: Propagate /var/www
       ansible.builtin.file:
         path: /var/www
@@ -165,12 +159,4 @@
         name: tor.service
         state: started
         enabled: false
-      become: true
-
-  handlers:
-    - name: Reboot the node to apply SELinux changes
-      ansible.builtin.reboot:
-        msg: "Rebooting to apply SELinux changes"
-        pre_reboot_delay: 9
-        reboot_timeout: 299
       become: true
