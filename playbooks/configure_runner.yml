@@ -17,8 +17,8 @@
   tasks:
     - name: Add known hosts
       ansible.builtin.known_hosts:
-        name: hostvars['localhost']['libvirt_host']
-        key: "{{ lookup('pipe', 'ssh-keyscan ' ~ hostvars['localhost']['libvirt_fqdn']) }}"
+        name: "{{ libvirt_host }}"
+        key: "{{ lookup('pipe', 'ssh-keyscan ' ~ libvirt_fqdn) }}"
 
     - name: Get latest GitHub Actions runner version
       ansible.builtin.uri:
