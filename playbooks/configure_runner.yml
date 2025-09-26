@@ -78,6 +78,5 @@
         cmd: |
           ./config.sh --name libvirt-infra --labels libvirt --url https://github.com/makeitworkcloud --token {{ runner_github_token }}
           sudo ./svc.sh install
-        args:
-          chdir: "/home/{{ runner_ssh_user }}/actions-runner"
+        chdir: "/home/{{ runner_ssh_user }}/actions-runner"
       changed_when: true
