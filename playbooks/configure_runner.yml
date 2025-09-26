@@ -29,26 +29,6 @@
         return_content: true
       register: actions_runner_json_reponse
 
-    - name: Install docker
-      ansible.builtin.dnf:
-        name: docker
-        state: present
-      become: true
-
-    - name: Start and enable docker
-      ansible.builtin.systemd:
-        name: docker
-        state: started
-        enabled: true
-      become: true
-
-    - name: Add user to docker group
-      ansible.builtin.user:
-        name: "{{ runner_ssh_user }}"
-        groups: docker
-        append: true
-      become: true
-
     - name: Download GitHub Actions runner
       ansible.builtin.get_url:
         url: >-
