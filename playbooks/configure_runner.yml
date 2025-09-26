@@ -58,6 +58,14 @@
         owner: "{{ runner_ssh_user }}"
         mode: '0644'
 
+    - name: Create actions-runner directory
+      ansible.builtin.file:
+        path: "/home/{{ runner_ssh_user }}/actions-runner"
+        state: directory
+        owner: "{{ runner_ssh_user }}"
+        group: "{{ runner_ssh_user }}"
+        mode: '0755'
+
     - name: Extract GitHub Actions runner
       ansible.builtin.unarchive:
         src: "/tmp/actions-runner-linux-x64-{{ actions_runner_json_reponse.json.tag_name[1:] }}.tar.gz"
