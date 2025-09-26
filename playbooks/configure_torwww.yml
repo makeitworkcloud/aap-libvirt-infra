@@ -23,6 +23,12 @@
         state: started
       delegate_to: "{{ libvirt_host }}"
 
+    - name: Disable SELinux
+      ansible.posix.selinux:
+        state: disabled
+      become: true
+      notify: Reboot the node to apply SELinux changes
+
     - name: Propagate /var/www
       ansible.builtin.file:
         path: /var/www
@@ -80,14 +86,7 @@
         dest: /var/www/html
         version: main
       become: true
-
-    - name: Grant owenrship to nginx of repo
-      ansible.builtin.file:
-        path: /var/www/html
-        owner: nginx
-        group: nginx
-        recurse: true
-      become: true
+      become_user: nginx
 
     - name: Cronjob to sync repo every half hour
       ansible.builtin.cron:
@@ -166,4 +165,12 @@
         name: tor.service
         state: started
         enabled: false
+      become: true
+
+  handlers:
+    - name: Reboot the node to apply SELinux changes
+      ansible.builtin.reboot:
+        msg: "Rebooting to apply SELinux changes"
+        pre_reboot_delay: 9
+        reboot_timeout: 299
       become: true
