@@ -15,4 +15,11 @@ vault_file_arg() {
         fi
     done
 }
+vault_arg=$(vault_file_arg "$@")
+
+if [[ -n "$vault_arg" ]]
+then
+    cat "${vault_cfg:-$vault_arg}"
+    exit 0
+fi
 sops decrypt secrets/secrets.yaml | grep vault_password | awk '{print $2}'
