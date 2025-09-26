@@ -106,7 +106,7 @@
 
     - name: Register WARP and accept TOS
       ansible.builtin.expect:
-        command: warp-cli registration new --accept-tos
+        command: warp-cli registration new -- --accept-tos
         responses:
           'Do you accept the Terms of Service?': 'yes'
       changed_when: false
