@@ -48,12 +48,12 @@
         force_basic_auth: true
         status_code: 200
       register: project_get
-      when: project_result.status == 400
 
     - name: Trigger Project Sync (Update)
       ansible.builtin.uri:
-        url: "{{ 'https://' ~ hostvars['localhost']['controller_host'] ~ '/api/controller/v2/projects/'
-          ~ (project_result.json.id | default(project_get.json.results[0].id)) ~ '/update/' }}"
+        url: >-
+          {{ 'https://' ~ hostvars['localhost']['controller_host'] ~ '/api/controller/v2/projects/'
+          ~ project_get.json.results[0].id ~ '/update/' }}
         method: POST
         user: "{{ hostvars['localhost']['controller_username'] }}"
         password: "{{ hostvars['localhost']['controller_password'] }}"
@@ -82,7 +82,7 @@
           - 400
       register: inventory_result
 
-    - name: Get inventory if POST failed
+    - name: Get inventory id
       ansible.builtin.uri:
         url: "https://{{ hostvars['localhost']['controller_host'] }}/api/controller/v2/inventories/?name=libvirt-infra&organization=1"
         method: GET
@@ -91,7 +91,6 @@
         force_basic_auth: true
         status_code: 200
       register: inventory_get
-      when: inventory_result.status == 400
 
     - name: Add host to inventory
       ansible.builtin.uri:
@@ -134,7 +133,7 @@
         validate_certs: false
       register: cred_result
 
-    - name: Get machine credential if POST failed
+    - name: Get machine credential id
       ansible.builtin.uri:
         url: "https://{{ hostvars['localhost']['controller_host'] }}/api/controller/v2/credentials/?name=libvirt-infra%20SSH&organization=1&credential_type=1"
         method: GET
@@ -143,7 +142,6 @@
         force_basic_auth: true
         status_code: 200
       register: cred_get
-      when: cred_result.status == 400
 
     - name: Create Vault Credential in AAP
       ansible.builtin.uri:
@@ -166,7 +164,7 @@
         validate_certs: false
       register: vault_cred_result
 
-    - name: Get vault credential if POST failed
+    - name: Get vault credential id
       ansible.builtin.uri:
         url: "https://{{ hostvars['localhost']['controller_host'] }}/api/controller/v2/credentials/?name=libvirt-infra%20Vault&organization=1&credential_type=3"
         method: GET
@@ -175,11 +173,6 @@
         force_basic_auth: true
         status_code: 200
       register: vault_cred_get
-      when: vault_cred_result.status == 400
-
-    - name: Display results
-      ansible.builtin.debug:
-        var: vault_cred_get
 
     - name: Find all files in playbooks/ directory
       ansible.builtin.find:
@@ -200,15 +193,67 @@
           name: "{{ item.path | basename | regex_replace('\\.yml$', '') }}"
           description: "Job template for {{ item.path | basename }}"
           job_type: "run"
-          inventory: "{{ inventory_result.json.id | default(inventory_get.json.results[0].id) }}"
-          project: "{{ project_result.json.id | default(project_get.json.results[0].id) }}"
+          inventory: inventory_get.json.results[0].id
+          project: project_get.json.results[0].id
           playbook: "playbooks/{{ item.path | basename }}"
           organization: "1"
-          credentials:
-            - "{{ cred_result.json.id | default(cred_get.json.results[0].id) }}"
-            - "{{ vault_cred_result.json.id | default(vault_cred_get.json.results[0].id) }}"
         status_code:
           - 201
           - 400
       loop: "{{ found_playbooks.files }}"
       register: job_template_results
+
+    - name: Get job template ids
+      ansible.builtin.uri:
+        url: >-
+          {{ 'https://' ~ hostvars['localhost']['controller_host'] ~ '/api/controller/v2/job_templates/?name='
+          ~ item.path | basename | regex_replace('\\.yml$', '') ~ '&organization=1' }}
+        method: GET
+        user: "{{ hostvars['localhost']['controller_username'] }}"
+        password: "{{ hostvars['localhost']['controller_password'] }}"
+        force_basic_auth: true
+        status_code: 200
+      loop: "{{ found_playbooks.files }}"
+      loop_control:
+        extended: true
+      register: job_template_gets
+
+    - name: Attach Machine credential to job template
+      ansible.builtin.uri:
+        url: >-
+          {{ 'https://' ~ hostvars['localhost']['controller_host'] ~ '/api/controller/v2/job_templates/'
+          ~ job_template_gets.results[ansible_loop.index0].json.results[0].id ~ '/credentials/' }}
+        method: POST
+        user: "{{ hostvars['localhost']['controller_username'] }}"
+        password: "{{ hostvars['localhost']['controller_password'] }}"
+        force_basic_auth: true
+        body_format: json
+        body:
+          id: "{{ cred_get.json.results[0].id | int }}"
+        status_code:
+          - 204
+          - 400
+      register: attach_cred
+      loop: "{{ found_playbooks.files }}"
+      loop_control:
+        extended: true
+
+    - name: Attach Vault credential to job template
+      ansible.builtin.uri:
+        url: >-
+          {{ 'https://' ~ hostvars['localhost']['controller_host'] ~ '/api/controller/v2/job_templates/'
+          ~ job_template_gets.results[ansible_loop.index0].json.results[0].id ~ '/credentials/' }}
+        method: POST
+        user: "{{ hostvars['localhost']['controller_username'] }}"
+        password: "{{ hostvars['localhost']['controller_password'] }}"
+        force_basic_auth: true
+        body_format: json
+        body:
+          id: "{{ vault_cred_get.json.results[0].id | int }}"
+        status_code:
+          - 204
+          - 400
+      register: attach_vault_cred
+      loop: "{{ found_playbooks.files }}"
+      loop_control:
+        extended: true
