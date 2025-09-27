@@ -183,7 +183,7 @@
         daemon_reload: true
       become: true
 
-    - name: "Start & Disable Tor"
+    - name: "Start & Enable Tor"
       ansible.builtin.systemd:
         name: tor.service
         state: started
@@ -213,3 +213,4 @@
         msg: "Rebooting to apply SELinux changes"
         pre_reboot_delay: 10
         reboot_timeout: 300
+      become: true
