@@ -162,3 +162,14 @@
         state: started
         enabled: false
       become: true
+
+    - name: Get Onion address
+      ansible.builtin.command:
+        cmd: cat /var/lib/tor/hidden_service/hostname
+      changed_when: false
+      become: true
+      register: onion_address
+
+    - name: Show Onion address
+      ansible.builtin.debug:
+        var: onion_address.stdout
