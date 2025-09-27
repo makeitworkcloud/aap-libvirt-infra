@@ -106,7 +106,7 @@
 
     - name: Register WARP, accept TOS and connect
       ansible.builtin.expect:
-        command: bash -c 'warp-cli registration new -- --accept-tos && warp-cli connect'
+        command: bash -c 'warp-cli registration new && warp-cli connect'
         responses:
           'Accept Terms of Service and Privacy Policy\? \[y/N\] ': 'y'
         timeout: 30
