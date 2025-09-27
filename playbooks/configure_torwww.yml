@@ -108,7 +108,7 @@
       ansible.builtin.expect:
         command: warp-cli registration new -- --accept-tos
         responses:
-          'Accept Terms of Service and Privacy Policy? \[y/N\]': 'y'
+          'Accept Terms of Service and Privacy Policy\? \[y/N\] ': 'y'
         timeout: 30
         echo: false
       changed_when: false
