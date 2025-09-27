@@ -104,20 +104,13 @@
         state: started
       become: true
 
-    - name: Register WARP and accept TOS
+    - name: Register WARP, accept TOS and connect
       ansible.builtin.expect:
-        command: warp-cli registration new -- --accept-tos
+        command: bash -c 'warp-cli registration new -- --accept-tos && warp-cli connect'
         responses:
           'Accept Terms of Service and Privacy Policy\? \[y/N\] ': 'y'
         timeout: 30
         echo: false
-      changed_when: false
-      become: true
-      become_user: "{{ torwww_username }}"
-
-    - name: Enable WARP
-      ansible.builtin.command:
-        cmd: warp-cli connect
       changed_when: false
       become: true
       become_user: "{{ torwww_username }}"
