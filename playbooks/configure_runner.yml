@@ -106,4 +106,3 @@
         pre_reboot_delay: 10
         reboot_timeout: 300
       become: true
-      when: selinux_status.changed

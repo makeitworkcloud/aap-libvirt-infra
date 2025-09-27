@@ -23,6 +23,12 @@
         state: started
       delegate_to: "{{ libvirt_host }}"
 
+    - name: Wait for user nginx to be created on the node
+      ansible.builtin.wait_for:
+        path: /etc/passwd
+        search_regex: "^nginx:"
+        timeout: 300
+
     - name: Propagate /var/www
       ansible.builtin.file:
         path: /var/www
