@@ -116,11 +116,6 @@
       become_user: "{{ torwww_username }}"
       register: warp_register
 
-    - name: Debug warp registration
-      ansible.builtin.debug:
-        var: warp_register
-      when: warp_register is defined
-
     - name: Verify WARP is on
       ansible.builtin.uri:
         url: "https://cloudflare.com/cdn-cgi/trace"
