@@ -82,7 +82,7 @@
       become: true
       become_user: nginx
 
-    - name: Cronjob to sync repo every half hour
+    - name: Cronjob to sync repo
       ansible.builtin.cron:
         name: "git-clone"
         minute: "*/15"
@@ -115,8 +115,7 @@
       become: true
       become_user: "{{ torwww_username }}"
       register: warp_register
-      failed_when: warp_register.rc != 0 and
-             "'Old registration is still around' not in warp_register.stdout"
+      failed_when: warp_register.rc != 0 and "'Old registration is still around' not in warp_register.stdout"
 
     - name: Verify WARP is on
       ansible.builtin.uri:
