@@ -157,11 +157,37 @@
         insertafter: "^HiddenServiceVersion 3$"
       become: true
 
+    - name: Ensure tor.service.d directory exists
+      ansible.builtin.file:
+        path: /etc/systemd/system/tor.service.d
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+      become: true
+
+    - name: Ensure tor.service starts after warp-svc.service
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/tor.service.d/override.conf
+        content: |
+          [Unit]
+          After=warp-svc.service
+          Requires=warp-svc.service
+        owner: root
+        group: root
+        mode: '0644'
+      become: true
+
+    - name: Reload systemd daemon
+      ansible.builtin.systemd:
+        daemon_reload: true
+      become: true
+
     - name: "Start & Disable Tor"
       ansible.builtin.systemd:
         name: tor.service
         state: started
-        enabled: false
+        enabled: true
       become: true
 
     - name: Get Onion address
@@ -174,3 +200,16 @@
     - name: Show Onion address
       ansible.builtin.debug:
         var: onion_address.stdout
+
+    - name: Disable SELinux
+      ansible.posix.selinux:
+        state: disabled
+      become: true
+      notify: Reboot the node to apply SELinux changes
+
+  handlers:
+    - name: Reboot the node to apply SELinux changes
+      ansible.builtin.reboot:
+        msg: "Rebooting to apply SELinux changes"
+        pre_reboot_delay: 10
+        reboot_timeout: 300
